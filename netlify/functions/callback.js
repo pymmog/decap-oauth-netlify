@@ -66,7 +66,7 @@ exports.handler = async (event) => {
   function sendMessage() {
     if (window.opener) {
       window.opener.postMessage(message, "*");
-      setTimeout(function() { window.close(); }, 1000);
+      setTimeout(function() { window.close(); }, 10000);
     } else {
       setTimeout(sendMessage, 100);
     }
