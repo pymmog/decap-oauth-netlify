@@ -52,32 +52,35 @@ exports.handler = async (event) => {
       };
     }
 
-    // This postMessage script is what Decap CMS listens for
-    const script = `
-<!DOCTYPE html>
+    const content = JSON.stringify({ token, provider: "github" });
+    const message = `authorization:github:success:${content}`;
+
+    const html = `<!DOCTYPE html>
 <html>
 <head><title>Authenticating...</title></head>
 <body>
+<p>Authenticated. You may close this window.</p>
 <script>
 (function() {
-  function receiveMessage(e) {
-    console.log("receiveMessage %o", e);
+  var message = ${JSON.stringify(message)};
+  function sendMessage() {
+    if (window.opener) {
+      window.opener.postMessage(message, "*");
+      setTimeout(function() { window.close(); }, 1000);
+    } else {
+      setTimeout(sendMessage, 100);
+    }
   }
-  window.addEventListener("message", receiveMessage, false);
-  window.opener.postMessage(
-    'authorization:github:success:${JSON.stringify({ token, provider: "github" }).replace(/'/g, "\\'")}',
-    "*"
-  );
+  sendMessage();
 })();
-<\/script>
-<p>Authenticated. You may close this window.</p>
+</script>
 </body>
 </html>`;
 
     return {
       statusCode: 200,
       headers: { "Content-Type": "text/html" },
-      body: script,
+      body: html,
     };
   } catch (err) {
     return { statusCode: 500, body: `Server error: ${err.message}` };
