@@ -1,0 +1,5 @@
+{
+  "name": "decap-cms-oauth-netlify",
+  "version": "1.0.0",
+  "description": "Minimal GitHub OAuth provider for Decap CMS, runs on Netlify Functions"
+}
