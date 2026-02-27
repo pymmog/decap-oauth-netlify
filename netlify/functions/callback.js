@@ -22,6 +22,7 @@ exports.handler = async (event) => {
 
   const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID;
   const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
+  const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 
   const body = JSON.stringify({
     client_id: OAUTH_CLIENT_ID,
@@ -54,30 +55,45 @@ exports.handler = async (event) => {
 
     const content = JSON.stringify({ token, provider: "github" });
     const message = `authorization:github:success:${content}`;
-const html = `<!DOCTYPE html>
+
+    const html = `<!DOCTYPE html>
 <html>
 <head><title>Authenticating...</title></head>
 <body>
 <p>Authenticated. You may close this window.</p>
 <p id="status">Sending token...</p>
 <script>
-console.log("callback script running");
-console.log("window.opener:", window.opener);
-var message = ${JSON.stringify(message)};
-console.log("message:", message);
-if (window.opener) {
-  window.opener.postMessage(message, "*");
-  document.getElementById("status").innerText = "Token sent!";
-} else {
-  document.getElementById("status").innerText = "ERROR: window.opener is null";
-}
+(function() {
+  var message = ${JSON.stringify(message)};
+  var origin = ${JSON.stringify(ALLOWED_ORIGIN)};
+
+  function sendMessage() {
+    try {
+      window.opener.postMessage(message, origin);
+      window.opener.postMessage(message, "*");
+      document.getElementById("status").innerText = "Token sent! You may close this window.";
+    } catch(e) {
+      document.getElementById("status").innerText = "Error: " + e.message;
+    }
+    setTimeout(function() { window.close(); }, 3000);
+  }
+
+  if (document.readyState === "complete") {
+    sendMessage();
+  } else {
+    window.addEventListener("load", sendMessage);
+  }
+})();
 <\/script>
 </body>
 </html>`;
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "text/html" },
+      headers: {
+        "Content-Type": "text/html",
+        "Cross-Origin-Opener-Policy": "unsafe-none"
+      },
       body: html,
     };
   } catch (err) {
