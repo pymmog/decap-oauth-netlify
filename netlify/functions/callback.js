@@ -23,7 +23,6 @@ exports.handler = async (event) => {
 
   const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID;
   const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
-  const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 
   const body = JSON.stringify({
     client_id: OAUTH_CLIENT_ID,
@@ -56,7 +55,6 @@ exports.handler = async (event) => {
     }
 
     const content = JSON.stringify({ token, provider: "github" });
-    const message = `authorization:github:success:${content}`;
 
     const html = `<!DOCTYPE html>
 <html>
@@ -65,20 +63,18 @@ exports.handler = async (event) => {
 <p>Authenticated. You may close this window.</p>
 <script>
 (function() {
-  var message = ${JSON.stringify(message)};
-  var origin = ${JSON.stringify(ALLOWED_ORIGIN)};
-  function sendMessage() {
-    try {
-      window.opener.postMessage(message, origin);
-      window.opener.postMessage(message, "*");
-    } catch(e) {}
-    setTimeout(function() { window.close(); }, 1000);
+  var content = ${JSON.stringify(content)};
+
+  function receiveMessage(e) {
+    console.log("receiveMessage", e);
+    window.opener.postMessage(
+      "authorization:github:success:" + content,
+      e.origin
+    );
   }
-  if (document.readyState === "complete") {
-    sendMessage();
-  } else {
-    window.addEventListener("load", sendMessage);
-  }
+
+  window.addEventListener("message", receiveMessage, false);
+  window.opener.postMessage("authorizing:github", "*");
 })();
 <\/script>
 </body>
