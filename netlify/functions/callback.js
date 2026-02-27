@@ -15,6 +15,7 @@ function post(options, body) {
 
 exports.handler = async (event) => {
   const code = event.queryStringParameters && event.queryStringParameters.code;
+  const state = event.queryStringParameters && event.queryStringParameters.state;
 
   if (!code) {
     return { statusCode: 400, body: "Missing code parameter" };
@@ -28,6 +29,7 @@ exports.handler = async (event) => {
     client_id: OAUTH_CLIENT_ID,
     client_secret: OAUTH_CLIENT_SECRET,
     code,
+    ...(state && { state }),
   });
 
   const options = {
@@ -61,23 +63,17 @@ exports.handler = async (event) => {
 <head><title>Authenticating...</title></head>
 <body>
 <p>Authenticated. You may close this window.</p>
-<p id="status">Sending token...</p>
 <script>
 (function() {
   var message = ${JSON.stringify(message)};
   var origin = ${JSON.stringify(ALLOWED_ORIGIN)};
-
   function sendMessage() {
     try {
       window.opener.postMessage(message, origin);
       window.opener.postMessage(message, "*");
-      document.getElementById("status").innerText = "Token sent! You may close this window.";
-    } catch(e) {
-      document.getElementById("status").innerText = "Error: " + e.message;
-    }
-    setTimeout(function() { window.close(); }, 3000);
+    } catch(e) {}
+    setTimeout(function() { window.close(); }, 1000);
   }
-
   if (document.readyState === "complete") {
     sendMessage();
   } else {
@@ -92,7 +88,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         "Content-Type": "text/html",
-        "Cross-Origin-Opener-Policy": "unsafe-none"
+        "Cross-Origin-Opener-Policy": "unsafe-none",
       },
       body: html,
     };
