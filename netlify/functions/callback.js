@@ -54,26 +54,24 @@ exports.handler = async (event) => {
 
     const content = JSON.stringify({ token, provider: "github" });
     const message = `authorization:github:success:${content}`;
-
-    const html = `<!DOCTYPE html>
+const html = `<!DOCTYPE html>
 <html>
 <head><title>Authenticating...</title></head>
 <body>
 <p>Authenticated. You may close this window.</p>
+<p id="status">Sending token...</p>
 <script>
-(function() {
-  var message = ${JSON.stringify(message)};
-  function sendMessage() {
-    if (window.opener) {
-      window.opener.postMessage(message, "*");
-      setTimeout(function() { window.close(); }, 10000);
-    } else {
-      setTimeout(sendMessage, 100);
-    }
-  }
-  sendMessage();
-})();
-</script>
+console.log("callback script running");
+console.log("window.opener:", window.opener);
+var message = ${JSON.stringify(message)};
+console.log("message:", message);
+if (window.opener) {
+  window.opener.postMessage(message, "*");
+  document.getElementById("status").innerText = "Token sent!";
+} else {
+  document.getElementById("status").innerText = "ERROR: window.opener is null";
+}
+<\/script>
 </body>
 </html>`;
 
