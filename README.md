@@ -4,7 +4,7 @@ Minimal OAuth provider for Decap CMS. No dependencies, pure Node.js.
 
 ## Deploy
 
-1. Push this repo to GitHub
+1. Fork this repo
 2. Link it to your Netlify site
 3. Set environment variables in Netlify:
    - `OAUTH_CLIENT_ID`
